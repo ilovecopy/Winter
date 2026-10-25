@@ -20,16 +20,20 @@ public class ClassScanner {
      * @param basePackage
      * @return {@link Set }<{@link Class }<{@link ? }>>
      */
-    public Set<Class<?>> scan(String basePackage) throws ClassNotFoundException, URISyntaxException, IOException {
-        String path = basePackage.replace('.', '/');
-        Enumeration<URL> systemResources = ClassLoader.getSystemResources(path);
-        Set<Class<?>> result = new LinkedHashSet<>();
-        while (systemResources.hasMoreElements()) {
-            URL resource = systemResources.nextElement();
-            File file = new File(resource.toURI());
-            scanDirectory(file, basePackage, result);
+    public Set<Class<?>> scan(String basePackage) {
+        try {
+            String path = basePackage.replace('.', '/');
+            Enumeration<URL> systemResources = ClassLoader.getSystemResources(path);
+            Set<Class<?>> result = new LinkedHashSet<>();
+            while (systemResources.hasMoreElements()) {
+                URL resource = systemResources.nextElement();
+                File file = new File(resource.toURI());
+                scanDirectory(file, basePackage, result);
+            }
+            return result;
+        } catch (IOException | URISyntaxException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
-        return result;
     }
 
     /**
