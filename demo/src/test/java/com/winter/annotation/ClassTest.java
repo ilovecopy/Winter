@@ -1,6 +1,7 @@
 package com.winter.annotation;
 
 import com.winter.core.ClassScanner;
+import com.winter.demo.OrderService;
 import com.winter.ioc.BeanContainer;
 import org.junit.jupiter.api.Test;
 
@@ -20,5 +21,7 @@ public class ClassTest {
         BeanContainer beanContainer = new BeanContainer();
         beanContainer.scan("com.winter.demo");
         beanContainer.refresh();
+        OrderService orderService = (OrderService) beanContainer.getBean(OrderService.class);
+        System.out.println("注入结果: " + orderService.getUserService());
     }
 }

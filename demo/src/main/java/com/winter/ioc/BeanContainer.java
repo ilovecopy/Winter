@@ -5,6 +5,7 @@ import com.winter.core.ClassScanner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.beans.Introspector;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,7 +86,34 @@ public class BeanContainer {
             throw new RuntimeException("没有找到Bean: " + beanName);
         }
         Object bean = beanDefinition.getBeanClass().getDeclaredConstructor().newInstance();
+        populateBean(bean);
         singletonObjects.put(beanName, bean);
         return bean;
+    }
+
+    public Object getBean(Class<?> type) {
+        for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
+            if (type.isAssignableFrom(entry.getValue().getBeanClass())) {
+                return getBean(entry.getKey());
+            }
+        }
+        throw new RuntimeException("没有找到Bean: " + type.getName());
+    }
+
+    private void populateBean(Object bean) {
+        // 这里可以进行依赖注入等操作
+        for (Field field : bean.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(com.winter.annotation.Autowired.class)) {
+                field.setAccessible(true);
+                Class<?> fieldType = field.getType();
+                Object dependency = getBean(fieldType);
+                try {
+                    field.set(bean, dependency);
+                    log.info("[注入]依赖: {} -> {}", field.getName(), dependency.getClass().getSimpleName());
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("注入依赖失败: " + field.getName(), e);
+                }
+            }
+        }
     }
 }
